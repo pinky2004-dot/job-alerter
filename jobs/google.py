@@ -1,45 +1,50 @@
 #company is google
 #defines how it will scrape jobs from google's career page
 import requests
-from bs4 import BeautifulSoup
 from jobs.base import BaseJobScraper
-from datetime import datetime
 from utils.logger import logger
 
 class GoogleJobScraper(BaseJobScraper):
     def fetch_jobs(self):
-        url = "https://careers.google.com/jobs/results/?distance=50&employment_type=INTERN"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+        url = "https://careers.google.com/api/v3/search/"
+        params = {
+            "distance": 50,
+            #"employment_type": "INTERN",
+            "language": "en",
+            "company": "Google",
+            "page": 1
         }
 
-        logger.info(f"Fetching Google jobs from: {url}")
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/json"
+        }
 
-        response = requests.get(url, headers=headers)
+        logger.info(f"Fetching Google jobs from API: {url}")
+
+        response = requests.get(url, params=params, headers=headers)
         if response.status_code != 200:
-            logger.error(f"Failed to retrieve data from Google. Status code: {response.status_code}")
+            logger.error(f"Failed to retrieve jobs from API. Status code: {response.status_code}")
             return []
 
-        soup = BeautifulSoup(response.content, 'html.parser')
-
-        job_elements = soup.find_all('div', class_='gc-card')
+        data = response.json()
+        job_results = data.get("jobs", [])
         jobs = []
 
-        for job_elem in job_elements:
-            title = job_elem.find('h2', class_='gc-card__title').text.strip()
-            link = job_elem.find('a', class_='gc-card__link')['href']
-            posted_at = job_elem.find('time')['datetime']  # e.g., "2025-04-23T12:00:00Z"
+        for job in job_results:
+            job_id = f"google-{job.get('job_id')}"
+            title = job.get('title')
+            url = f"https://careers.google.com/jobs/results/{job.get('job_id')}/"
+            posted_at = job.get('published_on')
 
-            job_id = f"google-{link.split('/')[-1]}"  # A unique ID based on URL
+            logger.debug(f"Job found: {title}")
 
-            job = {
-                'id': job_id,
-                'title': title,
-                'url': f"https://careers.google.com{link}",
-                'posted_at': posted_at
-            }
+            jobs.append({
+                "id": job_id,
+                "title": title,
+                "url": url,
+                "posted_at": posted_at
+            })
 
-            jobs.append(job)
-
-        logger.info(f"Found {len(jobs)} Google jobs")
+        logger.info(f"Found {len(jobs)} Google jobs from API")
         return jobs

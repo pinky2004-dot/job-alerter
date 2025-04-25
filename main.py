@@ -21,7 +21,7 @@ def filter_jobs(jobs, keywords):
 
 #builds the pipeline
 def main():
-    logger.info("Starting Job Scout...") #logs to console/file
+    logger.info("Starting Job Alerter...") #logs to console/file
 
     # Load config
     with open("config.yaml", "r") as f:
@@ -56,7 +56,7 @@ def main():
             new_jobs_total.extend(filtered)
 
     save_jobs(stored_jobs) #saves new jobs to file
-    logger.info(f"Job Scout completed. {len(new_jobs_total)} new jobs sent.")
+    logger.info(f"Job Alerter completed. {len(new_jobs_total)} new jobs sent.")
 
 if __name__ == "__main__":
     main()
