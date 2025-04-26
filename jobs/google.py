@@ -9,11 +9,11 @@ class GoogleJobScraper(BaseJobScraper):
     def fetch_jobs(self):
         url = "https://careers.google.com/api/v3/search/"
         params = {
-            "distance": 50,
-            "employment_type": "INTERN",
+            #"distance": 50,
+            #"employment_type": "INTERN",
             "language": "en",
             "company": "Google",
-            "page": 1
+            #"page": 1
         }
 
         headers = {
@@ -45,6 +45,7 @@ class GoogleJobScraper(BaseJobScraper):
                 continue
 
             posted_at = job.get("publish_date")
+            print(posted_at)
             if not posted_at:
                 logger.debug(f"Skipping job due to missing publish_date: {job_raw_id}")
                 continue
@@ -58,8 +59,11 @@ class GoogleJobScraper(BaseJobScraper):
                 continue
 
             job_id = f"google-{job_raw_id.split('/')[-1]}"
+            print(job_id)
             title = job.get("title", "No title")
+            print(title)
             apply_url = job.get("apply_url")
+            print(apply_url)
 
             if not apply_url or not posted_at:
                 logger.debug(f"Skipping job due to missing apply_url or publish_date: {job_id}")
