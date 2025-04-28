@@ -1,6 +1,8 @@
 #entry point
 import yaml
 from jobs.google import GoogleJobScraper
+from jobs.meta import MetaJobScraper
+from jobs.glassdoor import GlassdoorJobScraper
 from storage.file_store import load_jobs, save_jobs
 from notifications.email import send_email
 from utils.logger import logger
@@ -9,6 +11,10 @@ from utils.logger import logger
 def get_scraper(company_name):
     if company_name == 'google':
         return GoogleJobScraper()
+    if company_name == 'meta':
+        return MetaJobScraper()
+    if company_name == 'glassdoor':
+        return GlassdoorJobScraper()
     # You can add more scrapers here
     return None
 
@@ -41,11 +47,14 @@ def main():
             continue
 
         fetched_jobs = scraper.fetch_jobs()
-        seen_jobs = stored_jobs.get(name, [])
+        logger.info(f"Fetched {len(fetched_jobs)} jobs for {name}.")
 
+        seen_jobs = stored_jobs.get(name, [])
         seen_ids = {job['id'] for job in seen_jobs}
         new_jobs = [job for job in fetched_jobs if job['id'] not in seen_ids]
+
         filtered = filter_jobs(new_jobs, keywords)
+        logger.info(f"Filtered down to {len(filtered)} new jobs for {name} matching keywords.")
 
         if filtered:
             logger.info(f"Found {len(filtered)} new jobs for {name}")
